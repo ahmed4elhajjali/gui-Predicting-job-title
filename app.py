@@ -6,7 +6,7 @@ import docx  # Extract text from Word file
 import PyPDF2  # Extract text from PDF
 import re
 
-# Load pre-trained model and TF-IDF vectorizer using joblib (make sure these files are in the same directory)
+# Load pre-trained model and TF-IDF vectorizer using joblib
 svc_model = joblib.load('clf.pkl')
 tfidf = joblib.load('tfidf.pkl')
 le = joblib.load('encoder.pkl')
@@ -22,7 +22,7 @@ def cleanResume(txt):
     cleanText = re.sub('\s+', ' ', cleanText)
     return cleanText
 
-# Function to extract text from PDF
+# Extract text from PDF
 def extract_text_from_pdf(file):
     pdf_reader = PyPDF2.PdfReader(file)
     text = ''
@@ -30,7 +30,7 @@ def extract_text_from_pdf(file):
         text += page.extract_text()
     return text
 
-# Function to extract text from DOCX
+# Extract text from DOCX
 def extract_text_from_docx(file):
     doc = docx.Document(file)
     text = ''
@@ -38,7 +38,7 @@ def extract_text_from_docx(file):
         text += paragraph.text + '\n'
     return text
 
-# Function to extract text from TXT
+# Extract text from TXT
 def extract_text_from_txt(file):
     try:
         text = file.read().decode('utf-8')
@@ -46,7 +46,7 @@ def extract_text_from_txt(file):
         text = file.read().decode('latin-1')
     return text
 
-# Handle file upload and extract text
+# Handle file upload
 def handle_file_upload(uploaded_file):
     file_extension = uploaded_file.name.split('.')[-1].lower()
     if file_extension == 'pdf':
@@ -59,19 +59,17 @@ def handle_file_upload(uploaded_file):
         raise ValueError("Unsupported file type. Please upload a PDF, DOCX, or TXT file.")
     return text
 
-# Predict job category
+# Prediction
 def pred(input_resume):
     cleaned_text = cleanResume(input_resume)
-    vectorized_text = tfidf.transform([cleaned_text])
-    vectorized_text = vectorized_text.toarray()
+    vectorized_text = tfidf.transform([cleaned_text]).toarray()
     predicted_category = svc_model.predict(vectorized_text)
     predicted_category_name = le.inverse_transform(predicted_category)
     return predicted_category_name[0]
 
-# Streamlit app UI
+# Streamlit app
 def main():
     st.set_page_config(page_title="Resume Category Prediction", page_icon="📄", layout="wide")
-
     st.title("Resume Category Prediction App")
     st.markdown("Upload a resume in PDF, TXT, or DOCX format and get the predicted job category.")
 
@@ -80,17 +78,17 @@ def main():
     if uploaded_file is not None:
         try:
             resume_text = handle_file_upload(uploaded_file)
-            st.success("✅ Successfully extracted the text from the uploaded resume.")
+            st.success("✅ Text extracted successfully!")
 
-            if st.checkbox("Show extracted text", False):
+            if st.checkbox("Show extracted text"):
                 st.text_area("Extracted Resume Text", resume_text, height=300)
 
             st.subheader("Predicted Category")
             category = pred(resume_text)
-            st.success(f"🎯 The predicted category of the uploaded resume is: **{category}**")
+            st.success(f"🎯 This resume is predicted as: **{category}**")
 
         except Exception as e:
-            st.error(f"❌ Error processing the file: {str(e)}")
+            st.exception(e)  # Show full error for debugging
 
 if __name__ == "__main__":
     main()
