@@ -3,3 +3,8 @@ scikit-learn
 pickle5
 python-docx
 PyPDF2
+pandas
+numpy
+python-docx
+PyPDF2
+joblib
